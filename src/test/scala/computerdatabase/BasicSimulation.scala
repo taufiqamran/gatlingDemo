@@ -13,8 +13,7 @@ class BasicSimulation extends Simulation {
     .acceptLanguageHeader("en-US,en;q=0.5")
     .userAgentHeader("Mozilla/5.0 (Macintosh; Intel Mac OS X 10.8; rv:16.0) Gecko/20100101 Firefox/16.0")
 
-  val scn = scenario("Scenario Name") // A scenario is a chain of requests and pauses
-    .exec(http("request_1")
+  val scn = exec(http("request_1")
       .get("/"))
     .pause(7) // Note that Gatling has recorder real time pauses
     .exec(http("request_2")
@@ -26,7 +25,9 @@ class BasicSimulation extends Simulation {
     .exec(http("request_4")
       .get("/"))
     .pause(2)
-    .exec(http("request_5")
+
+
+    val scn2 = exec(http("request_5")
       .get("/computers?p=1"))
     .pause(670.milliseconds)
     .exec(http("request_6")
@@ -48,5 +49,11 @@ class BasicSimulation extends Simulation {
       .formParam("""discontinued""", """""")
       .formParam("""company""", """37"""))
 
-  setUp(scn.inject(atOnceUsers(1)).protocols(httpProtocol))
+
+  val scnas = scenario("test").exec(scn).exec(scn2)
+  val test = scenario("haha").exec(scn2).exec(scn)
+  setUp(scnas.inject(rampUsers(1).during(1.minutes))
+
+    .andThen(test.inject(rampUsers(1).during(1.minutes)))
+  ).protocols(httpProtocol)
 }
